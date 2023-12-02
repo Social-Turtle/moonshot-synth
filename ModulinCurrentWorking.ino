@@ -1,10 +1,8 @@
 /* 
-Generating MIDI
-- Function to translate notes + bends -> gradient slide
-Trellis:
-- MIDI Engine
-- Metro Graphics
-- Looper Functionally?
+TODO:
+ - Develop function to make a gradient slide effect from notes + bends
+ - Develop a single-press input function on trellis for settings panel
+ - Attain multi-channel midi output via drum machine
  */
 
 // LIBRARIES USED
