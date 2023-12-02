@@ -1,8 +1,9 @@
 /* 
 TODO:
- - Develop function to make a gradient slide effect from notes + bends
- - Develop a single-press input function on trellis for settings panel
+ - Develop function to make a gradient slide effect from notes + bends - start with computeNote
+ - Develop a single-press input function on trellis for settings panel - need to determine what settings we want to mess with.
  - Attain multi-channel midi output via drum machine
+ - Reformat toDisplay for new display module **waiting on a display**
  */
 
 // LIBRARIES USED
@@ -10,25 +11,25 @@ TODO:
 #include <Wire.h> // i2c protocol
 #include "Adafruit_NeoTrellis.h" // Neotrellis library
 
-Adafruit_NeoTrellis trellis; //define neotrellis object
-#define INT_PIN 10 //define neotrellis interrupt pin
+Adafruit_NeoTrellis trellis; //define Neotrellis object - - - - - - - - - - - - - - - alter this to accept a 1x2 grid
+#define INT_PIN 10 //tells the main arduino when to pay attention to the Trellis
 
 // PIN ASSIGNMENTS
 const int buttonPin = 5;  // the number of the pushbutton pin
 const int velocityPin = A3; // analog input for velocity potentiometer
 const int pitchPin = A5; // the number of the ribbon potentiometer pin
 
-const unsigned long debounceDelay = 5; //length of debounces in ms
+const unsigned long debounceDelay = 5; //length in ms
 const unsigned long debounceNote = 10;
 
 
-const int startNote = 79; // the lowest note playable on the modulin - start on middle c
-const int fretNumber = 15; // the number of notes the potentiometer can toggle
-int modeCode = 0;
-int noteVelocity = 80;
+const int startNote = 79; // the lowest note playable on the modulin's primary string
+const int fretNumber = 15; // the number of notes the potentiometer can reach
+int modeCode = 0; // current state
+int noteVelocity = 80; // note velocity output, later controlled by a fader
 
 // PITCH COMPUTATION
-byte keyRoots[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}; // *delete*?
+byte keyRoots[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 byte major[7] = {0, 2, 4, 5, 7, 9, 11}; 
 byte minor[7] = {0, 2, 3, 5, 7, 8, 10};
 byte blues[6] = {0, 3, 5, 6, 7, 9};
@@ -75,12 +76,12 @@ void setup() {
   Wire.setClock(50000); // match Metro Mini i2c clock of 50kHz
   pinMode(INT_PIN, INPUT); // Setup interrupt pin
 
-  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+  for (int thisReading = 0; thisReading < numReadings; thisReading++) { // initialize averaging function
     readings[thisReading] = 0;
   }
 
-  if(!trellis.begin()){
-    //Serial.println("could not start trellis");
+  if(!trellis.begin()){ // start trellis
+    Serial.println("could not start trellis");
     while(1) delay(1);
   }
   else{
@@ -126,7 +127,6 @@ void loop() {
     int reading = digitalRead(buttonPin); // read the state of the pushbutton value:
     if (reading != lastButtonState) {
       lastButtonDebounceTime = millis(); // record when the button value changes
-      //Serial.println("DifferenceIdentified");
     }
     if (reading != buttonState) { // update current button state
       buttonState = reading;
@@ -137,7 +137,8 @@ void loop() {
         MidiUSB.flush();
         toDisplay(999); // turn off display if no note is present
         isOn = 0;
-      } else if (buttonState == HIGH && isOn == 0) {
+
+      } else if (buttonState == HIGH && isOn == 0) { // the button is pressed and no note is playing
         Serial.println("button down, play once");
         noteOn(0, computeNote(modeCode, pitchPin, fretNumber), noteVelocity); //play the note
         lastRibbonTriggerTime = millis();
@@ -152,9 +153,7 @@ void loop() {
       updateNote(computeNote(modeCode, pitchPin, fretNumber));
     }
   }
-
     lastButtonState = buttonState;
-    //Serial.println(analogRead(pitchPin));
     
     if (buttonState == LOW) { // Button is pressed
       if (!averagingPaused) {
@@ -184,16 +183,22 @@ void loop() {
     }
 }
 
-// a callback for key presses
-TrellisCallback blink(keyEvent evt){
+
+// - // - // - // - // - // - // - // - // - // Functions below here // - // - // - // - // - // - // - // - // - // - // - // - // - //
+
+
+TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
   // WHEN A BUTTON HAS BEEN PRESSED
   if (evt.bit.EDGE == SEESAW_KEYPAD_EDGE_RISING) {
     // set the pressed button to white
     trellis.pixels.setPixelColor(evt.bit.NUM, 255, 255, 255);
     trellis.pixels.show();
-    if (evt.bit.NUM >= 0 && evt.bit.NUM <= 2 && evt.bit.NUM != currentPage) { // IF ROW 1, and page is changing update Trellis Page
+    if (evt.bit.NUM >= 0 && evt.bit.NUM <= 2 && evt.bit.NUM != currentPage) { // If we press a novel page button, update Trellis Page
         currentPage = evt.bit.NUM;
         trellisFlicker(currentPage);
+    } else if (currentPage == 2 && evt.bit.NUM >= 4 && evt.bit.NUM <= 15) { // a standard button in settings mode
+        // determine settings operations
+
     } else if (evt.bit.NUM >= 4 && evt.bit.NUM <= 15) { // if a standard button
         toggleArray(evt.bit.NUM, currentPage);
     }      
@@ -235,12 +240,13 @@ TrellisCallback blink(keyEvent evt){
     trellis.pixels.show(); //update display
   }
 }
+
 // updates colored buttons based on array values
 void trellisFlicker(int currentPage) {
   for (int i = 4; i < trellis.pixels.numPixels(); i++) {
     if (modeMemory[currentPage][i] == 0) { // if value is zero
       trellis.pixels.setPixelColor(i, 100, 100, 100);
-    } else if (modeMemory[currentPage][i]) { // if value is one
+    } else { // if value is one
       if (currentPage == 0) {
         trellis.pixels.setPixelColor(i, 255, 0, 0);
       } else if (currentPage == 1) {
@@ -260,20 +266,13 @@ void toggleArray(int buttonValue, int currentPage) { //not yet working
     modeMemory[currentPage][buttonValue] = 0;        
   }
 }
-// unused code to trigger all trellis buttons to the same color
-void setTrellisButtons(int red, int green, int blue) {
-  for(uint16_t i=4; i<trellis.pixels.numPixels(); i++) {
-    trellis.pixels.setPixelColor(i, red, green, blue); // colors for initial flash
-    trellis.pixels.show();
-  }
-}
-// sent a three digit integer display code to Metro display
-void toDisplay(int note) {
-  // Send 3-digit integer display code to Metro
+
+void toDisplay(int note) {  // Send 3-digit integer display code to Metro
   Wire.beginTransmission(10); // metro address
   Wire.write((uint8_t*)&note, sizeof(note));
   Wire.endTransmission();
 }
+
 // activate a MIDI note
 void noteOn(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOn = { 0x09, 0x90 | channel, pitch, velocity };
@@ -284,12 +283,14 @@ void noteOff(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOff = { 0x08, 0x80 | channel, pitch, velocity };
   MidiUSB.sendMIDI(noteOff);
 }
-// compute current code mode
+
+// compute current mode state
 byte* getCurrentMode(int modeIndex) {
   if (modeIndex >= 0 && modeIndex < numModes){
     return modes[modeIndex];
   }
 }
+
 // compute size of an array pointed to by arr
 int getArraySize(byte* arr) {
   int size = 0;
@@ -298,11 +299,13 @@ int getArraySize(byte* arr) {
   }
   return size;
 }
-//unknown
+
+//Allows us to interact with our DAW if we deem it worthwhile
 void controlChange(byte channel, byte control, byte value) {
   midiEventPacket_t event = { 0x0B, 0xB0 | channel, control, value };
   MidiUSB.sendMIDI(event);
 }
+
 // Yet unused theoretical pitch bending function
 void pitchBend(byte channel, int value) {
   byte lowValue = value & 0x7F;
@@ -310,6 +313,7 @@ void pitchBend(byte channel, int value) {
   midiEventPacket_t pitchBend = { 0x0E, 0xE0 | channel, lowValue, highValue };
   MidiUSB.sendMIDI(pitchBend);
 }
+
 // solve for note from mode and position
 int computeNote(int modeCode,int pitchPin, int fretNumber) {
   // compute proper pitch from mode data and ribbon data
