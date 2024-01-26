@@ -1,22 +1,13 @@
-/*
-TODO:
- - Develop function to make a gradient slide effect from notes + bends - start with computeNote - - Give this to a MoonShotter
- - Sometimes launches at G9 (MIDI 127) why? - signal noise issue with potentiometer. Let's solve that.
- - Chord pack development
- - general smoothness/bug hunting
- - accellerometer interfacing
- - led strip debugging
- */
 // Primary Synth operates on Channel 0
 // Drum Kit operates on Channel 1
 // Chord Library/Arpeggiator operates on Channel 2
 
 // LIBRARIES USED
-#include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoPixel.h> // Library for controlling the NeoTrellis
 #include <MIDIUSB.h> //Midi Communication protocol
 #include <Wire.h> // i2c protocol
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h> // Library to generate display code
+#include <Adafruit_SSD1306.h> // Library to control display
 #include "Adafruit_NeoTrellis.h" // Neotrellis library
 #define Y_DIM 4 //number of rows of key
 #define X_DIM 8 //number of columns of keys
@@ -41,32 +32,29 @@ const int bendPin = A2;
 const unsigned long debounceDelay = 5; //length in ms
 const unsigned long debounceNote = 50;
 
+
+// PITCH COMPUTATION
 int startNote = 55; // the lowest note playable on the modulin's primary string
 const int fretNumber = 15; // the number of notes the potentiometer can reach
 int modeCode = 0; // scale mode we're in
 int noteVelocity = 80; // note velocity output, later controlled by a fader
-
-// PITCH COMPUTATION
-byte keyRoots[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-byte major[7] = {0, 2, 4, 5, 7, 9, 11}; 
+byte major[7] = {0, 2, 4, 5, 7, 9, 11}; // Keep track of our scales! (7 Note Scales only)
 byte minor[7] = {0, 2, 3, 5, 7, 8, 10};
-byte blues[6] = {0, 3, 5, 6, 7, 9};
-byte pentatonic[5] = {0, 2, 4, 7, 9};
-int numModes = 4; 
-byte modeLengths[4] = {7, 7, 6, 5};
-byte* modes[] = {major, minor, blues, pentatonic}; 
+byte harmonicMinor[7] = {0, 2, 3, 5, 7, 8, 11};
+int numModes = 4; // How many modes we have
+int modeLengths = 7; // all modes are of length 7
+byte* modes[] = {major, minor, harmonicMinor}; 
 int bendVal;
 
-// INITIALIZE AT GLOBAL
-unsigned long lastButtonDebounceTime = 0;
-unsigned long lastRibbonTriggerTime = 0;
-int previousNote; 
+// Debouncing
+unsigned long lastButtonDebounceTime = 0; // Initialize time of button presses
+unsigned long lastRibbonTriggerTime = 0;  // Initialize time of ribbon presses
 int currentTime = millis();
 int lastTime = 0;
-byte isOn = 0;
-int lastNote;
+byte isOn = 0;                            // Tracks if a note is actively playing
+int lastNote;                             // Last note played
 int currentPage = 0;
-int lastFret;
+int lastFret;                             // Last fret position (to check if a note has changed)
 int lastVelocity;
 int toggleThreshold = 20; // threshold for velocitypot to trigger a note
 
@@ -75,7 +63,6 @@ int readings[numReadings];
 int readIndex = 0;
 int total = 0;
 int noteAverage = 0;
-
 int bendAverage;
 int bendTotal;
 const int bendPoints = 32;
@@ -143,6 +130,15 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
           Serial.println(modeCode);
           trellis.setPixelColor(evt.bit.NUM, 0x552200); // ORANGE      
         }
+    } else if (currentPage == 1 && evt.bit.NUM > 7 && evt.bit.NUM <= 31) { // DRUM MACHINE SETTINGS FROM HERE:
+        /*
+        There are four rows indexed from 0, 8 columns indexed from 0. We can find out which column we're in by
+        modding the button number by 8. We can find out which row we're in by dividing the button number by 8 (using integer division).
+        */
+        int buttonRow = evt.bit.NUM / 8;
+        int buttonColumn = evt.bit.NUM % 8;
+        arrangeChords(buttonRow, buttonColumn, 1);
+        
     } else if (evt.bit.NUM > 3 && evt.bit.NUM <= 31) { // if a standard button and chords or beatbox
         toggleArray(evt.bit.NUM, currentPage);
     } else if (evt.bit.NUM == 3) { // Tempo button!
@@ -173,6 +169,14 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
       } else if (evt.bit.NUM == 3) { // if it's the tempo button, just keep it blue
           trellis.setPixelColor(evt.bit.NUM, 0x0000FF);
       }
+    } else if (currentPage == 1 && evt.bit.NUM > 7 && evt.bit.NUM <= 31) { // DRUM MACHINE SETTINGS FROM HERE:
+        /*
+        There are four rows indexed from 0, 8 columns indexed from 0. We can find out which column we're in by
+        modding the button number by 8. We can find out which row we're in by dividing the button number by 8 (using integer division).
+        */
+        int buttonRow = evt.bit.NUM / 8;
+        int buttonColumn = evt.bit.NUM % 8;
+        arrangeChords(buttonRow, buttonColumn, 0);
     } else { // if a standard button
       if (modeMemory[currentPage][evt.bit.NUM] == 0) {
         trellis.setPixelColor(evt.bit.NUM, 0x333333);  
@@ -261,13 +265,60 @@ void pitchBend(byte channel, int value) {
 // solve for note from mode and position
 int computeNote(int modeCode,int pitchPin, int fretNumber) {
   // compute proper pitch from mode data and ribbon data
-  int numOfNotes = modeLengths[modeCode];
+  int numOfNotes = modeLengths;
   int fretIndex = map(noteAverage, 330, 690, 0, fretNumber); // calculate fret value
   lastFret = fretIndex;
   if (fretIndex >= 0 && fretIndex <= fretNumber) {
     int pitch = startNote + (12 * (fretIndex / numOfNotes)) + getCurrentMode(modeCode)[(fretIndex % numOfNotes)];
   return pitch; 
   }
+}
+
+void arrangeChords(int Y, int X, bool buttonPress) { // button x position, button y position, 
+    if(buttonPress) {
+      if (Y == 1) {
+        noteOn(4, getCurrentMode(modeCode)[X], 60);
+        noteOn(4, getCurrentMode(modeCode)[X+2], 60);
+        noteOn(4, getCurrentMode(modeCode)[X+4], 60);
+        MidiUSB.flush();
+       
+      } else if (Y == 2) {
+        noteOn(1, getCurrentMode(modeCode)[X], 60);
+        noteOn(1, getCurrentMode(modeCode)[X+2], 60);
+        noteOn(1, getCurrentMode(modeCode)[X+4], 60);
+        noteOn(1, getCurrentMode(modeCode)[X+6], 60);
+        MidiUSB.flush();
+          
+      } else if (Y == 3) {
+        noteOn(1, getCurrentMode(modeCode)[X] + 7 + 0, 60);
+        noteOn(1, getCurrentMode(modeCode)[X] + 11, 60);
+        noteOn(1, getCurrentMode(modeCode)[X] + 14, 60);
+        noteOn(1, getCurrentMode(modeCode)[X] + 17, 60);
+        MidiUSB.flush();
+        // fancy wildness (X+7 Semitones Major b7)
+      }
+    else {
+      if (Y == 1) {
+        noteOff(1, getCurrentMode(modeCode)[X], 60);
+        noteOff(1, getCurrentMode(modeCode)[X+2], 60);
+        noteOff(1, getCurrentMode(modeCode)[X+4], 60);
+        MidiUSB.flush();
+      } else if (Y == 2) {
+        noteOff(1, getCurrentMode(modeCode)[X], 60);
+        noteOff(1, getCurrentMode(modeCode)[X+2], 60);
+        noteOff(1, getCurrentMode(modeCode)[X+4], 60);
+        noteOff(1, getCurrentMode(modeCode)[X+6], 60);
+        MidiUSB.flush();
+      } else if (Y == 3) {
+        noteOff(1, getCurrentMode(modeCode)[X] + 7 + 0, 60);
+        noteOff(1, getCurrentMode(modeCode)[X] + 11, 60);
+        noteOff(1, getCurrentMode(modeCode)[X] + 14, 60);
+        noteOff(1, getCurrentMode(modeCode)[X] + 17, 60);
+        MidiUSB.flush();
+        // fancy wildness (X+7 Semitones Major b7)
+      }
+    }
+ }
 }
 
 void clearData() {
