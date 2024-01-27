@@ -6,17 +6,13 @@
 #include <Adafruit_NeoPixel.h> // Library for controlling the NeoTrellis
 #include <MIDIUSB.h> //Midi Communication protocol
 #include <Wire.h> // i2c protocol
-#include <Adafruit_GFX.h> // Library to generate display code
-#include <Adafruit_SSD1306.h> // Library to control display
 #include "Adafruit_NeoTrellis.h" // Neotrellis library
 #define Y_DIM 4 //number of rows of key
 #define X_DIM 8 //number of columns of keys
 #define LED_PIN     2    // Define the data pin connected to the LED strip
 #define NUM_LEDS    29   // Define the number of LEDs in your strip
 #define OLED_RESET 4
-Adafruit_SSD1306 display(OLED_RESET);
-// accellerometer sits at 0x62
-// display @ 0x3C
+
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -212,14 +208,14 @@ void trellisFlicker(int currentPage) {
     }
 }
 
-void toDisplay(String text) {
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0,0);
-  display.println(text);
-  display.display();
-}
+//void toDisplay(String text) {
+//  display.clearDisplay();
+//  display.setTextSize(1);
+//  display.setTextColor(WHITE);
+//  display.setCursor(0,0);
+//  display.println(text);
+//  display.display();
+//}
 
 // activate a MIDI note
 void noteOn(byte channel, byte pitch, byte velocity) {
@@ -339,7 +335,7 @@ void updateNote(int pitch) { // add a check for 127 spikes
       lastRibbonTriggerTime = millis();
       MidiUSB.flush();
       lastNote = pitch; // record note
-      toDisplay("Diff Note!"); // display on Metro
+      //toDisplay("Diff Note!"); // display on Metro
     }
   }
 }
@@ -349,7 +345,7 @@ void updateNote(int pitch) { // add a check for 127 spikes
 void setup() {
   Serial.begin(9600);
   Wire.begin();
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  //display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   Wire.setClock(50000); // match Metro Mini i2c clock of 50kHz
   
   Serial.println("Setup Begin");
@@ -420,6 +416,9 @@ void loop() {
     }
     MidiUSB.flush();
     beatIndex++;     // do stuff on the eighth
+    noteOff(1, 42, 60);
+    noteOff(1, 38, 60);
+    noteOff(1, 36, 60);
     if (beatIndex > 7) { // update the index of the 1/8th we're on
       beatIndex = 0; // trip back to zero if we step over 7
     }
@@ -436,13 +435,13 @@ void loop() {
       if (noteVelocity < toggleThreshold && isOn == 1) { // if the string is released but a note is playing: 
         noteOff(0, lastNote, 0); //Kill the note
         MidiUSB.flush();
-        toDisplay(""); // turn off display if no note is present
+        //toDisplay(""); // turn off display if no note is present
         isOn = 0;
     } else if (noteVelocity > toggleThreshold && isOn == 0) { // the string is pressed and no note is playing
         noteOn(0, computeNote(modeCode, pitchPin, fretNumber), noteVelocity); //play the note
         lastRibbonTriggerTime = millis();
         MidiUSB.flush();
-        toDisplay("Playing");
+        //toDisplay("Playing");
         isOn = 1;
     }
   }
@@ -489,7 +488,7 @@ void loop() {
     bendAverage = bendTotal / bendPoints;
     bendVal = map(bendAverage, 2, 1020, 0, 16383);
     if (bendVal > 8192 + 1500 || bendVal < 8192 - 1500) { // If pot is distant enough to trigger a bend . - - - - - - - - - - - - This methodology spams the pitch wheel, and could use to be updated to only send bend values when either 1: the note played changes or 2: the bend value changes outside of standard noise.
-      pitchBend(0, bendVal);
+      //pitchBend(0, bendVal);
     }
 
   int sensorValue = analogRead(pitchPin);  // Read analog input value
