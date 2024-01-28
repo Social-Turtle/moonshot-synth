@@ -133,7 +133,7 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
         */
         int buttonRow = evt.bit.NUM / 8;
         int buttonColumn = evt.bit.NUM % 8;
-        arrangeChords(buttonRow, buttonColumn, 1);
+        arrangeChords(buttonRow, buttonColumn, true);
         
     } else if (evt.bit.NUM > 3 && evt.bit.NUM <= 31) { // if a standard button and chords or beatbox
         toggleArray(evt.bit.NUM, currentPage);
@@ -172,7 +172,7 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
         */
         int buttonRow = evt.bit.NUM / 8;
         int buttonColumn = evt.bit.NUM % 8;
-        arrangeChords(buttonRow, buttonColumn, 0);
+        arrangeChords(buttonRow, buttonColumn, false);
     } else { // if a standard button
       if (modeMemory[currentPage][evt.bit.NUM] == 0) {
         trellis.setPixelColor(evt.bit.NUM, 0x333333);  
@@ -273,49 +273,50 @@ int computeNote(int modeCode,int pitchPin, int fretNumber) {
 void arrangeChords(int Y, int X, bool buttonPress) { // button x position, button y position, 
     if(buttonPress) {
       if (Y == 1) {
-        noteOn(4, getCurrentMode(modeCode)[X], 60);
-        noteOn(4, getCurrentMode(modeCode)[X+2], 60);
-        noteOn(4, getCurrentMode(modeCode)[X+4], 60);
+        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[X], 60);
+        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[X+2], 60);
+        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[X+4], 60);
         MidiUSB.flush();
        
       } else if (Y == 2) {
-        noteOn(1, getCurrentMode(modeCode)[X], 60);
-        noteOn(1, getCurrentMode(modeCode)[X+2], 60);
-        noteOn(1, getCurrentMode(modeCode)[X+4], 60);
-        noteOn(1, getCurrentMode(modeCode)[X+6], 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X], 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X+2], 60);
+        //noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X+4], 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X+6], 60);
         MidiUSB.flush();
           
       } else if (Y == 3) {
-        noteOn(1, getCurrentMode(modeCode)[X] + 7 + 0, 60);
-        noteOn(1, getCurrentMode(modeCode)[X] + 11, 60);
-        noteOn(1, getCurrentMode(modeCode)[X] + 14, 60);
-        noteOn(1, getCurrentMode(modeCode)[X] + 17, 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 7 + 0, 60);
+        //noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 11, 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 14, 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 17, 60);
         MidiUSB.flush();
         // fancy wildness (X+7 Semitones Major b7)
       }
-    else {
+    } else if (!buttonPress) {
+      Serial.println("ButtonOff weird");
       if (Y == 1) {
-        noteOff(1, getCurrentMode(modeCode)[X], 60);
-        noteOff(1, getCurrentMode(modeCode)[X+2], 60);
-        noteOff(1, getCurrentMode(modeCode)[X+4], 60);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X+2], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X+4], 0);
         MidiUSB.flush();
       } else if (Y == 2) {
-        noteOff(1, getCurrentMode(modeCode)[X], 60);
-        noteOff(1, getCurrentMode(modeCode)[X+2], 60);
-        noteOff(1, getCurrentMode(modeCode)[X+4], 60);
-        noteOff(1, getCurrentMode(modeCode)[X+6], 60);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X+2], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X+4], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X+6], 0);
         MidiUSB.flush();
       } else if (Y == 3) {
-        noteOff(1, getCurrentMode(modeCode)[X] + 7 + 0, 60);
-        noteOff(1, getCurrentMode(modeCode)[X] + 11, 60);
-        noteOff(1, getCurrentMode(modeCode)[X] + 14, 60);
-        noteOff(1, getCurrentMode(modeCode)[X] + 17, 60);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X] + 7 + 0, 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X] + 11, 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X] + 14, 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X] + 17, 0);
         MidiUSB.flush();
         // fancy wildness (X+7 Semitones Major b7)
       }
     }
  }
-}
+
 
 void clearData() {
   for (int i = 0; i < numReadings; i++) {
@@ -401,17 +402,13 @@ void loop() {
   //toDisplay("Yo Mama");
   if (millis() - nextBeat >= tempo/8 && dontbother) { // if we've reached one eighth
     nextBeat = millis();
-    Serial.println(beatIndex);
     if (modeMemory[0][8 + beatIndex] == 1) {
-      Serial.println("Hat");
       noteOn(1, 42, 60); // closed high hat
     }
     if (modeMemory[0][16 + beatIndex] == 1) {
-      Serial.println("Snare");
       noteOn(1, 38, 60);
     }
     if (modeMemory[0][24 + beatIndex] == 1) {
-      Serial.println("Kick");
       noteOn(1, 36, 60);
     }
     MidiUSB.flush();
