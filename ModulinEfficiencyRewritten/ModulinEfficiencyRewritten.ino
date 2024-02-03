@@ -1,3 +1,5 @@
+// Hey Gabriel, things to do: Add colored lights when chords are pressed, add a mute switch for drums, and maybe check chord math
+
 // Primary Synth operates on Channel 0
 // Drum Kit operates on Channel 1
 // Chord Library/Arpeggiator operates on Channel 2
@@ -399,7 +401,10 @@ void setup() {
 
 
 void loop() {
-  //toDisplay("Yo Mama");
+  //nSerial.print("RibbonPot: ");
+  //Serial.println(analogRead(A0));
+  Serial.print("FSR: ");
+  Serial.println(analogRead(A1));
   if (millis() - nextBeat >= tempo/8 && dontbother) { // if we've reached one eighth
     nextBeat = millis();
     if (modeMemory[0][8 + beatIndex] == 1) {
@@ -421,7 +426,7 @@ void loop() {
     }
   }
 
-  noteVelocity = map(analogRead(velocityPin), 330, 690, 0, 128);   // Convert velocitypin into a velocity value
+  noteVelocity = map(analogRead(velocityPin), 380, 900, 0, 128);   // Convert velocitypin into a velocity value
   trellis.read(); // Check the trellis
 
   if ((millis() - lastButtonDebounceTime) > debounceDelay) { // if it's been 5 ms since the last update
