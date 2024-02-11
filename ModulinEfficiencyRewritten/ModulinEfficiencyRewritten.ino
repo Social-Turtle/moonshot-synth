@@ -1,5 +1,3 @@
-// Hey Gabriel, things to do: Add colored lights when chords are pressed, add a mute switch for drums, and maybe check chord math
-
 // Primary Synth operates on Channel 0
 // Drum Kit operates on Channel 1
 // Chord Library/Arpeggiator operates on Channel 2
@@ -33,13 +31,13 @@ const unsigned long debounceNote = 50;
 
 // PITCH COMPUTATION
 int startNote = 55; // the lowest note playable on the modulin's primary string
-const int fretNumber = 15; // the number of notes the potentiometer can reach
+const int fretNumber = 25; // the number of notes the potentiometer can reach
 int modeCode = 0; // scale mode we're in
 int noteVelocity = 80; // note velocity output, later controlled by a fader
 byte major[7] = {0, 2, 4, 5, 7, 9, 11}; // Keep track of our scales! (7 Note Scales only)
 byte minor[7] = {0, 2, 3, 5, 7, 8, 10};
 byte harmonicMinor[7] = {0, 2, 3, 5, 7, 8, 11};
-int numModes = 4; // How many modes we have
+int numModes = 3; // How many modes we have
 int modeLengths = 7; // all modes are of length 7
 byte* modes[] = {major, minor, harmonicMinor}; 
 int bendVal;
@@ -102,7 +100,15 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
     if (evt.bit.NUM >= 0 && evt.bit.NUM <= 2 && evt.bit.NUM != currentPage) { // If we press a novel page button, update Trellis Page
         currentPage = evt.bit.NUM;
         trellisFlicker(currentPage);
-    } else if (currentPage == 2 && evt.bit.NUM >= 4 && evt.bit.NUM <= 31) { // CONTROL SETTINGS FROM HERE:
+    }else if (evt.bit.NUM == 7){ //Drum mute button
+        toggleArray(evt.bit.NUM, 0);
+        if (modeMemory[0][evt.bit.NUM] == 0){
+          trellis.setPixelColor(evt.bit.NUM, 0xFF0000);
+        }
+        else {
+          trellis.setPixelColor(evt.bit.NUM, 0xFA9C1B);
+        }
+    }else if (currentPage == 2 && evt.bit.NUM >= 4 && evt.bit.NUM <= 31) { // CONTROL SETTINGS FROM HERE:
         if (evt.bit.NUM == 8) { // Row 1, button 0 = - 1 semitone
           startNote--;
           trellis.setPixelColor(evt.bit.NUM, 0x550000); // RED
@@ -119,13 +125,11 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
           if (modeCode > 0) {
             modeCode--;
           }
-          Serial.println(modeCode);
           trellis.setPixelColor(evt.bit.NUM, 0x005555); // CYAN
         } else if (evt.bit.NUM == 13) { // Row 1, button 5 = MODECODE + 1 IF AVAILABLE
           if (modeCode < 4) {
             modeCode++;
           }
-          Serial.println(modeCode);
           trellis.setPixelColor(evt.bit.NUM, 0x552200); // ORANGE      
         }
     } else if (currentPage == 1 && evt.bit.NUM > 7 && evt.bit.NUM <= 31) { // DRUM MACHINE SETTINGS FROM HERE:
@@ -133,16 +137,16 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
         There are four rows indexed from 0, 8 columns indexed from 0. We can find out which column we're in by
         modding the button number by 8. We can find out which row we're in by dividing the button number by 8 (using integer division).
         */
+        trellis.setPixelColor(evt.bit.NUM, 0xFFFF00); //YELLOW
         int buttonRow = evt.bit.NUM / 8;
         int buttonColumn = evt.bit.NUM % 8;
         arrangeChords(buttonRow, buttonColumn, true);
-        
+                
     } else if (evt.bit.NUM > 3 && evt.bit.NUM <= 31) { // if a standard button and chords or beatbox
         toggleArray(evt.bit.NUM, currentPage);
     } else if (evt.bit.NUM == 3) { // Tempo button!
       dontbother = true;
       tempo = millis() - lastTempoPressTime;
-      Serial.println(tempo);
       lastTempoPressTime = millis();
       nextBeat = lastTempoPressTime;
       beatIndex = 0;
@@ -175,6 +179,8 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
         int buttonRow = evt.bit.NUM / 8;
         int buttonColumn = evt.bit.NUM % 8;
         arrangeChords(buttonRow, buttonColumn, false);
+        trellis.setPixelColor(evt.bit.NUM, 0x333333);
+        
     } else { // if a standard button
       if (modeMemory[currentPage][evt.bit.NUM] == 0) {
         trellis.setPixelColor(evt.bit.NUM, 0x333333);  
@@ -264,7 +270,7 @@ void pitchBend(byte channel, int value) {
 int computeNote(int modeCode,int pitchPin, int fretNumber) {
   // compute proper pitch from mode data and ribbon data
   int numOfNotes = modeLengths;
-  int fretIndex = map(noteAverage, 330, 690, 0, fretNumber); // calculate fret value
+  int fretIndex = map(noteAverage, 270, 710, 0, fretNumber); // calculate fret value
   lastFret = fretIndex;
   if (fretIndex >= 0 && fretIndex <= fretNumber) {
     int pitch = startNote + (12 * (fretIndex / numOfNotes)) + getCurrentMode(modeCode)[(fretIndex % numOfNotes)];
@@ -272,41 +278,44 @@ int computeNote(int modeCode,int pitchPin, int fretNumber) {
   }
 }
 
+//byte major[7] = {0, 2, 4, 5, 7, 9, 11}; // Keep track of our scales! (7 Note Scales only)
+//byte minor[7] = {0, 2, 3, 5, 7, 8, 10};
+//byte harmonicMinor[7] = {0, 2, 3, 5, 7, 8, 11};
+
 void arrangeChords(int Y, int X, bool buttonPress) { // button x position, button y position, 
     if(buttonPress) {
       if (Y == 1) {
-        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[X], 60);
-        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[X+2], 60);
-        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[X+4], 60);
+        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[X % 7], 60);
+        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 60);
+        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 60);
         MidiUSB.flush();
        
       } else if (Y == 2) {
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X], 60);
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X+2], 60);
-        //noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X+4], 60);
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X+6], 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X % 7], 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[(X+6) % 7], 60);
         MidiUSB.flush();
           
       } else if (Y == 3) {
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 7 + 0, 60);
-        //noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 11, 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 7, 60);
+        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 11, 60);
         noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 14, 60);
         noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 17, 60);
         MidiUSB.flush();
         // fancy wildness (X+7 Semitones Major b7)
       }
     } else if (!buttonPress) {
-      Serial.println("ButtonOff weird");
       if (Y == 1) {
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X], 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X+2], 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X+4], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X % 7], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 0);
         MidiUSB.flush();
       } else if (Y == 2) {
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X], 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X+2], 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X+4], 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X+6], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X % 7], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 0);
+        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[(X+6) % 7], 0);
         MidiUSB.flush();
       } else if (Y == 3) {
         noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X] + 7 + 0, 0);
@@ -332,7 +341,6 @@ void updateNote(int pitch) { // add a check for 127 spikes
   if (pitch >= startNote) { // weed pitch errors
     if (pitch != lastNote) { // if note is different
       noteOff(0, lastNote, 0); //Kill the note
-      //Serial.println("note is different");
       noteOn(0, pitch, noteVelocity); // trigger note
       isOn = 1;
       lastRibbonTriggerTime = millis();
@@ -401,20 +409,19 @@ void setup() {
 
 
 void loop() {
-  //nSerial.print("RibbonPot: ");
-  //Serial.println(analogRead(A0));
-  Serial.print("FSR: ");
-  Serial.println(analogRead(A1));
+  Serial.println(analogRead(A0));
   if (millis() - nextBeat >= tempo/8 && dontbother) { // if we've reached one eighth
     nextBeat = millis();
-    if (modeMemory[0][8 + beatIndex] == 1) {
-      noteOn(1, 42, 60); // closed high hat
-    }
-    if (modeMemory[0][16 + beatIndex] == 1) {
-      noteOn(1, 38, 60);
-    }
-    if (modeMemory[0][24 + beatIndex] == 1) {
-      noteOn(1, 36, 60);
+    if (modeMemory[0][7] == 1){
+      if (modeMemory[0][8 + beatIndex] == 1) {
+        noteOn(1, 42, 60); // closed high hat
+      }
+      if (modeMemory[0][16 + beatIndex] == 1) {
+        noteOn(1, 38, 60);
+      }
+      if (modeMemory[0][24 + beatIndex] == 1) {
+        noteOn(1, 36, 60);
+      }
     }
     MidiUSB.flush();
     beatIndex++;     // do stuff on the eighth
@@ -426,8 +433,9 @@ void loop() {
     }
   }
 
-  noteVelocity = map(analogRead(velocityPin), 380, 900, 0, 128);   // Convert velocitypin into a velocity value
+  noteVelocity = map(analogRead(velocityPin), 1000, 100, 0, 128);   // Convert velocitypin into a velocity value
   trellis.read(); // Check the trellis
+  //Serial.println(noteVelocity);
 
   if ((millis() - lastButtonDebounceTime) > debounceDelay) { // if it's been 5 ms since the last update
     if (noteVelocity != lastVelocity) { // if the velocity has changed, record when
