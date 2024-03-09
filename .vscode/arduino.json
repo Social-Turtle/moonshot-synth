@@ -1,0 +1,5 @@
+{
+    "board": "arduino:avr:leonardo",
+    "port": "/dev/tty.usbmodemMIDI1",
+    "sketch": "ModulinBalancedTrellisLights/ModulinBalancedTrellisLights.ino"
+}

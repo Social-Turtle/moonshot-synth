@@ -1,6 +1,6 @@
 /*
 TODO:
- - Develop function to make a gradient slide effect from notes + bends - start with computeNote - - Give this to a MoonShotter
+ - Develop function to make a gradient slide effect from notes + bends - saitart with computeNote - - Give this to a MoonShotter
  - Sometimes launches at G9 (MIDI 127) why? - signal noise issue with potentiometer. Let's solve that.
  - Chord pack development
  - general smoothness/bug hunting

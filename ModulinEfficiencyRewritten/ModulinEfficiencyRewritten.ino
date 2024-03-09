@@ -448,7 +448,7 @@ void loop() {
         //toDisplay(""); // turn off display if no note is present
         isOn = 0;
     } else if (noteVelocity > toggleThreshold && isOn == 0) { // the string is pressed and no note is playing
-        noteOn(0, computeNote(modeCode, pitchPin, fretNumber), noteVelocity); //play the note
+        //noteOn(0, computeNote(modeCode, pitchPin, fretNumber), noteVelocity); //play the note
         lastRibbonTriggerTime = millis();
         MidiUSB.flush();
         //toDisplay("Playing");
