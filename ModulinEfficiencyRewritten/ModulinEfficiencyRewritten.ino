@@ -7,12 +7,16 @@
 #include <MIDIUSB.h> //Midi Communication protocol
 #include <Wire.h> // i2c protocol
 #include "Adafruit_NeoTrellis.h" // Neotrellis library
+#include <SoftwareSerial.h>
+
+
 #define Y_DIM 4 //number of rows of key
 #define X_DIM 8 //number of columns of keys
 #define LED_PIN     2    // Define the data pin connected to the LED strip
 #define NUM_LEDS    29   // Define the number of LEDs in your strip
 #define OLED_RESET 4
 
+SoftwareSerial mySerial(0,1);
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -285,43 +289,43 @@ int computeNote(int modeCode,int pitchPin, int fretNumber) {
 void arrangeChords(int Y, int X, bool buttonPress) { // button x position, button y position, 
     if(buttonPress) {
       if (Y == 1) {
-        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[X % 7], 60);
-        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 60);
-        noteOn(4, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[X % 7], 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 60);
         MidiUSB.flush();
        
       } else if (Y == 2) {
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X % 7], 60);
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 60);
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 60);
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[(X+6) % 7], 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[X % 7], 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[(X+6) % 7], 60);
         MidiUSB.flush();
           
       } else if (Y == 3) {
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 7, 60);
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 11, 60);
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 14, 60);
-        noteOn(1, startNote - 12 + getCurrentMode(modeCode)[X] + 17, 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[X] + 7, 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[X] + 11, 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[X] + 14, 60);
+        noteOn(2, startNote - 12 + getCurrentMode(modeCode)[X] + 17, 60);
         MidiUSB.flush();
         // fancy wildness (X+7 Semitones Major b7)
       }
     } else if (!buttonPress) {
       if (Y == 1) {
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X % 7], 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[X % 7], 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 0);
         MidiUSB.flush();
       } else if (Y == 2) {
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X % 7], 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[(X+6) % 7], 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[X % 7], 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[(X+2) % 7], 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[(X+4) % 7], 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[(X+6) % 7], 0);
         MidiUSB.flush();
       } else if (Y == 3) {
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X] + 7 + 0, 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X] + 11, 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X] + 14, 0);
-        noteOff(1, startNote - 12 + getCurrentMode(modeCode)[X] + 17, 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[X] + 7 + 0, 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[X] + 11, 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[X] + 14, 0);
+        noteOff(2, startNote - 12 + getCurrentMode(modeCode)[X] + 17, 0);
         MidiUSB.flush();
         // fancy wildness (X+7 Semitones Major b7)
       }
@@ -355,6 +359,7 @@ void updateNote(int pitch) { // add a check for 127 spikes
 
 void setup() {
   Serial.begin(9600);
+  mySerial.begin(9600);
   Wire.begin();
   //display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   Wire.setClock(50000); // match Metro Mini i2c clock of 50kHz
@@ -409,6 +414,12 @@ void setup() {
 
 
 void loop() {
+//  while (1) { -- Proof of life, display output
+//    mySerial.print('1');
+//    delay(1000);
+//    mySerial.print('0');
+//    delay(1000);
+//  }
   Serial.println(analogRead(A0));
   if (millis() - nextBeat >= tempo/8 && dontbother) { // if we've reached one eighth
     nextBeat = millis();
