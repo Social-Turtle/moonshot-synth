@@ -103,36 +103,53 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
     trellis.setPixelColor(evt.bit.NUM, 0x555555);   // set the pressed button to white
     if (evt.bit.NUM >= 0 && evt.bit.NUM <= 2 && evt.bit.NUM != currentPage) { // If we press a novel page button, update Trellis Page
         currentPage = evt.bit.NUM;
+        switch (currentPage) {
+          case 0 : mySerial.print('a'); break;
+          case 1 : mySerial.print('b'); break;
+          case 2 : mySerial.print('c'); break;
+        }
         trellisFlicker(currentPage);
     }else if (evt.bit.NUM == 7){ //Drum mute button
         toggleArray(evt.bit.NUM, 0);
-        if (modeMemory[0][evt.bit.NUM] == 0){
+        if (modeMemory[0][7] == 0){
+          mySerial.print('q');
           trellis.setPixelColor(evt.bit.NUM, 0xFF0000);
         }
         else {
+          mySerial.print('r');
           trellis.setPixelColor(evt.bit.NUM, 0xFA9C1B);
         }
     }else if (currentPage == 2 && evt.bit.NUM >= 4 && evt.bit.NUM <= 31) { // CONTROL SETTINGS FROM HERE:
         if (evt.bit.NUM == 8) { // Row 1, button 0 = - 1 semitone
           startNote--;
+          mySerial.print('z');
           trellis.setPixelColor(evt.bit.NUM, 0x550000); // RED
         } else if (evt.bit.NUM == 9) { // Row 1, button 1 = + 1 semitone
           startNote++;
+          mySerial.print('y');
           trellis.setPixelColor(evt.bit.NUM, 0x005500); // GREEN   
         } else if (evt.bit.NUM == 10) { // Row 1, button 2 = - 1 octave
           startNote -= 12;
+          mySerial.print('x');
           trellis.setPixelColor(evt.bit.NUM, 0x000055); // BLUE 
         } else if (evt.bit.NUM == 11) { // Row 1, button 3 = + 1 octave
           startNote += 12;
+          mySerial.print('w');
           trellis.setPixelColor(evt.bit.NUM, 0x550055); // PURPLE  
         } else if (evt.bit.NUM == 12) { // Row 1, button 4 = MODECODE - 1 IF AVAILABLE
           if (modeCode > 0) {
+            mySerial.print('v'); // Decreased
             modeCode--;
+          } else {
+            mySerial.print('u'); // Can't decrease
           }
           trellis.setPixelColor(evt.bit.NUM, 0x005555); // CYAN
         } else if (evt.bit.NUM == 13) { // Row 1, button 5 = MODECODE + 1 IF AVAILABLE
           if (modeCode < 4) {
             modeCode++;
+            mySerial.print('t'); // Increased
+          } else {
+            mySerial.print('s'); // Can't increase
           }
           trellis.setPixelColor(evt.bit.NUM, 0x552200); // ORANGE      
         }
@@ -220,15 +237,6 @@ void trellisFlicker(int currentPage) {
     }
 }
 
-//void toDisplay(String text) {
-//  display.clearDisplay();
-//  display.setTextSize(1);
-//  display.setTextColor(WHITE);
-//  display.setCursor(0,0);
-//  display.println(text);
-//  display.display();
-//}
-
 // activate a MIDI note
 void noteOn(byte channel, byte pitch, byte velocity) {
   midiEventPacket_t noteOn = { 0x09, 0x90 | channel, pitch, velocity };
@@ -270,6 +278,24 @@ void pitchBend(byte channel, int value) {
   MidiUSB.sendMIDI(pitchBend);
 }
 
+char TwelvetoChar(int num) {
+  num = num % 12;
+  switch (num) {
+    case 0 : return '0';
+    case 1 : return '1';
+    case 2 : return '2';
+    case 3 : return '3';
+    case 4 : return '4';
+    case 5 : return '5';
+    case 6 : return '6';
+    case 7 : return '7';
+    case 8 : return '8';
+    case 9 : return '9';
+    case 10 : return '!';
+    case 11 : return '@';
+  }
+}
+
 // solve for note from mode and position
 int computeNote(int modeCode,int pitchPin, int fretNumber) {
   // compute proper pitch from mode data and ribbon data
@@ -278,6 +304,7 @@ int computeNote(int modeCode,int pitchPin, int fretNumber) {
   lastFret = fretIndex;
   if (fretIndex >= 0 && fretIndex <= fretNumber) {
     int pitch = startNote + (12 * (fretIndex / numOfNotes)) + getCurrentMode(modeCode)[(fretIndex % numOfNotes)];
+    TwelvetoChar(pitch);
   return pitch; 
   }
 }
@@ -420,7 +447,7 @@ void loop() {
 //    mySerial.print('0');
 //    delay(1000);
 //  }
-  Serial.println(analogRead(A0));
+  //Serial.println(analogRead(A0));
   if (millis() - nextBeat >= tempo/8 && dontbother) { // if we've reached one eighth
     nextBeat = millis();
     if (modeMemory[0][7] == 1){
@@ -467,7 +494,7 @@ void loop() {
     }
   }
 
-  if (noteVelocity > toggleThreshold) { // what case is this??? - - - - - - - - - - - -  - - -  - **
+  if (noteVelocity > toggleThreshold) {
     if (millis() - lastRibbonTriggerTime > debounceNote) {
       updateNote(computeNote(modeCode, pitchPin, fretNumber));
     }
@@ -476,13 +503,11 @@ void loop() {
   if (noteVelocity < toggleThreshold) { // note is triggered
     if (!averagingPaused) {
       averagingPaused = true;
-      //Serial.println("Averaging Paused");
     }
   } else { // string released
     if (averagingPaused) {
       clearData();
       averagingPaused = false;
-      //Serial.println("Averaging Resumed");
     }
   }
 
@@ -494,36 +519,36 @@ void loop() {
     if (readIndex >= numReadings) {
       readIndex = 0;
     }
-    noteAverage = total / numReadings; // **skews data low at start. How to fix this?
+    noteAverage = total / numReadings;
   }
 
-    // Running average for note bend data
-    bendTotal = bendTotal - bendReadings[bendIndex];
-    bendReadings[bendIndex] = analogRead(bendPin);
-    bendTotal = bendTotal + bendReadings[bendIndex];
-    bendIndex++;
-    if (bendIndex >= bendPoints) {
-      bendIndex = 0;
-    }
+//    // Running average for note bend data - - - - - - - - - - - - - - - Bend Functionality Not in Use
+//    bendTotal = bendTotal - bendReadings[bendIndex];
+//    bendReadings[bendIndex] = analogRead(bendPin);
+//    bendTotal = bendTotal + bendReadings[bendIndex];
+//    bendIndex++;
+//    if (bendIndex >= bendPoints) {
+//      bendIndex = 0;
+//    }
+//
+//    bendAverage = bendTotal / bendPoints;
+//    bendVal = map(bendAverage, 2, 1020, 0, 16383);
+//    if (bendVal > 8192 + 1500 || bendVal < 8192 - 1500) { // If pot is distant enough to trigger a bend . - - - - - - - - - - - - This methodology spams the pitch wheel, and could use to be updated to only send bend values when either 1: the note played changes or 2: the bend value changes outside of standard noise.
+//      //pitchBend(0, bendVal);
+//    }
 
-    bendAverage = bendTotal / bendPoints;
-    bendVal = map(bendAverage, 2, 1020, 0, 16383);
-    if (bendVal > 8192 + 1500 || bendVal < 8192 - 1500) { // If pot is distant enough to trigger a bend . - - - - - - - - - - - - This methodology spams the pitch wheel, and could use to be updated to only send bend values when either 1: the note played changes or 2: the bend value changes outside of standard noise.
-      //pitchBend(0, bendVal);
-    }
-
-  int sensorValue = analogRead(pitchPin);  // Read analog input value
-  int numLEDsToLight = map(sensorValue, 330, 650, 0, NUM_LEDS);  // Map input value to the number of LEDs
-  //Serial.println(numLEDsToLight);
-  // Turn off all LEDs
-  for (int i = 0; i < NUM_LEDS; i++) {
-    strip.setPixelColor(i, 0);  // Set color to 'off' (Black)
-  }
-  strip.show();  // Update the strip to turn off all LEDs
-  
-  // Turn on LEDs based on the mapped value
-  for (int i = 0; i < numLEDsToLight; i++) {
-    strip.setPixelColor(i, strip.Color(0, 0, 80));  // Set color to Red (adjust as needed)
-  }
-  strip.show();  // Update the strip to show the illuminated LEDs
+//  int sensorValue = analogRead(pitchPin); // Read analog input value - - - - - - - - - - LED Strip Functionality Not in Use
+//  int numLEDsToLight = map(sensorValue, 330, 650, 0, NUM_LEDS);  // Map input value to the number of LEDs
+//  //Serial.println(numLEDsToLight);
+//  // Turn off all LEDs
+//  for (int i = 0; i < NUM_LEDS; i++) {
+//    strip.setPixelColor(i, 0);  // Set color to 'off' (Black)
+//  }
+//  strip.show();  // Update the strip to turn off all LEDs
+//  
+//  // Turn on LEDs based on the mapped value
+//  for (int i = 0; i < numLEDsToLight; i++) {
+//    strip.setPixelColor(i, strip.Color(0, 0, 80));  // Set color to Red (adjust as needed)
+//  }
+//  strip.show();  // Update the strip to show the illuminated LEDs
 }
