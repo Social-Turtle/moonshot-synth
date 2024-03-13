@@ -441,12 +441,6 @@ void setup() {
 
 
 void loop() {
-//  while (1) { -- Proof of life, display output
-//    mySerial.print('1');
-//    delay(1000);
-//    mySerial.print('0');
-//    delay(1000);
-//  }
   //Serial.println(analogRead(A0));
   if (millis() - nextBeat >= tempo/8 && dontbother) { // if we've reached one eighth
     nextBeat = millis();

@@ -1,23 +1,3 @@
-/**************************************************************************
- This is an example for our Monochrome OLEDs based on SSD1306 drivers
-
- Pick one up today in the adafruit shop!
- ------> http://www.adafruit.com/category/63_98
-
- This example is for a 128x32 pixel display using I2C to communicate
- 3 pins are required to interface (two I2C and one reset).
-
- Adafruit invests time and resources providing this open
- source code, please support Adafruit and open-source
- hardware by purchasing products from Adafruit!
-
- Written by Limor Fried/Ladyada for Adafruit Industries,
- with contributions from the open source community.
- BSD license, check license.txt for more information
- All text above, and the splash screen below must be
- included in any redistribution.
- **************************************************************************/
-
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -28,8 +8,6 @@
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
-#define NUMFLAKES     10 // Number of snowflakes in the animation example
 
 #define LOGO_HEIGHT   16
 #define LOGO_WIDTH    16
@@ -86,6 +64,7 @@ void setup() {
         
       // Print the incoming character on the OLED display
   display.setCursor(0, 0);
+  display.write("Press Play...");
 }
 
 void loop() {
@@ -95,15 +74,198 @@ void loop() {
       char firstChar = Serial.read();
       switch(firstChar) {
         case '0' : display.clearDisplay();
-                    break;
-        case '1' : display.setCursor(0, 0);
-                  display.setTextSize(1);
-                  display.setTextColor(SSD1306_WHITE); 
-                  display.write(firstChar); break;
-        case '2' : display.write(firstChar); break;
-        case '3' : display.write(firstChar); break;
-        case '4' : display.write(firstChar); break;
-        default :  display.write(firstChar); break;
+                   display.setCursor(0,0);
+                   display.write("C");
+                  break;
+        case '1' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("C#");
+                   break;
+        case '2' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("D");
+                   break;
+        case '3' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("Eb");
+                   break;
+        case '4' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("E");
+                   break;
+        case '5' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("F");
+                   break;
+        case '6' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("F#");
+                   break;
+        case '7' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("G");
+                   break;
+        case '8' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("Ab");
+                   break;
+        case '9' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("A");
+                   break;
+        case '!' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("Bb");
+                   break;
+        case '@' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("B");
+                   break;
+        case '#' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case '$' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case '%' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case '^' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case '&' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case '*' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case '(' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case ')' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case '+' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case '-' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'a' : display.clearDisplay(); // Page 0, RED
+                   display.setCursor(0,0);
+                   display.write("Drum Machine");
+                   break;
+        case 'b' : display.clearDisplay(); // Page 1, YELLOW
+                   display.setCursor(0,0);
+                   display.write("Chord Bank");
+                   break;
+        case 'c' : display.clearDisplay(); // Page 2, GREEN
+                   display.setCursor(0,0);
+                   display.write("Settings Mode");
+                   break;
+        case 'd' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'e' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'f' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'g' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'h' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'i' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'j' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'k' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'l' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'm' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'n' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'o' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'p' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write(firstChar);
+                   break;
+        case 'q' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("Drums Muted");
+                   break;
+        case 'r' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("Drums Playing");
+                   break;
+        case 's' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("Cannot alter mode");
+                   break;
+        case 't' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("Mode increased");
+                   break;
+        case 'u' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("Cannot alter mode");
+                   break;
+        case 'v' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("Mode decreased");
+                   break;
+        case 'w' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("+1 Octave");
+                   break;
+        case 'x' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("-1 Octave");
+                   break;
+        case 'y' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("+1 Semitone");
+                   break;
+        case 'z' : display.clearDisplay();
+                   display.setCursor(0,0);
+                   display.write("-1 Semitone");
+                   break;
+        default :  display.clearDisplay(); break;
       }
       display.display();
     }
