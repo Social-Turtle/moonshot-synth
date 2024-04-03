@@ -148,6 +148,22 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
             mySerial.print('s'); // Can't increase
           }
           trellis.setPixelColor(evt.bit.NUM, 0x552200); // ORANGE      
+        } else if (evt.bit.NUM == 16) {
+            mySerial.print('#'); // Red
+        } else if (evt.bit.NUM == 17) {
+            mySerial.print('&'); // Orange
+        } else if (evt.bit.NUM == 18) {
+            mySerial.print(')'); // Yellow
+        } else if (evt.bit.NUM == 19) {
+            mySerial.print('$'); // Green
+        } else if (evt.bit.NUM == 20) {
+            mySerial.print('('); // Cyan
+        } else if (evt.bit.NUM == 21) {
+            mySerial.print('%'); // Blue
+        } else if (evt.bit.NUM == 22) {
+            mySerial.print('^'); // Purple
+        } else if (evt.bit.NUM == 23) {
+            mySerial.print('*'); // White
         }
     } else if (currentPage == 1 && evt.bit.NUM > 7 && evt.bit.NUM <= 31) { // DRUM MACHINE SETTINGS FROM HERE:
         /*

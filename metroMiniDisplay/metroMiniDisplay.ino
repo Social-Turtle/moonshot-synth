@@ -16,6 +16,46 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+
+#define LOGO_HEIGHT   32
+#define LOGO_WIDTH    32
+static const unsigned char PROGMEM logo_bmp[] =
+{ 0b00000000, 0b00000000, 0b00000000, 0b00000000,
+  0b00000000, 0b00000000, 0b00000000, 0b00000000,
+  0b00000000, 0b00000000, 0b00000000, 0b00000000,
+  0b00000000, 0b00000000, 0b00000000, 0b00111000,
+  0b00000000, 0b00000000, 0b00000000, 0b01111000,
+  0b00000000, 0b00000000, 0b00000011, 0b10000000,
+  0b00000000, 0b00000000, 0b00001111, 0b00000000,
+  0b00000000, 0b00001111, 0b11011100, 0b00000000,
+  0b00000000, 0b00111111, 0b11110000, 0b00000000,
+  0b00000000, 0b11111111, 0b11100110, 0b00000000,
+  0b00000001, 0b11111111, 0b11001111, 0b00000000,
+  0b00000001, 0b11111111, 0b10111111, 0b00000000,
+  0b00000011, 0b11011111, 0b00111111, 0b10000000,
+  0b00000111, 0b11011111, 0b01111111, 0b10000000,
+  0b00000111, 0b10000110, 0b11111111, 0b11000000,
+  0b00001111, 0b10011110, 0b11111111, 0b11000000,
+  0b00001111, 0b01111101, 0b11111111, 0b11100000,
+  0b00001110, 0b01111101, 0b11111111, 0b11100000,
+  0b00001100, 0b11111011, 0b11100011, 0b11100000,
+  0b00001100, 0b11111011, 0b11100011, 0b11100000,
+  0b00001001, 0b11111111, 0b11101111, 0b11000000,
+  0b00001001, 0b11111111, 0b11011111, 0b11000000,
+  0b00001011, 0b11111111, 0b10111111, 0b10000000,
+  0b00000011, 0b11111111, 0b01111111, 0b10000000,
+  0b00000001, 0b11111111, 0b01111111, 0b00000000,
+  0b00000000, 0b11111110, 0b01111110, 0b00000000,
+  0b00000000, 0b11111110, 0b11111100, 0b00000000,
+  0b00000000, 0b00111110, 0b11111000, 0b00000000,
+  0b00000000, 0b00001110, 0b11000000, 0b00000000,
+  0b00000000, 0b00000000, 0b00000000, 0b00000000,
+  0b00000000, 0b00000000, 0b00000000, 0b00000000,
+  0b00000000, 0b00000000, 0b00000000, 0b00000000,
+   };
+
+
+/*
 #define LOGO_HEIGHT   16
 #define LOGO_WIDTH    16
 static const unsigned char PROGMEM logo_bmp[] =
@@ -34,9 +74,10 @@ static const unsigned char PROGMEM logo_bmp[] =
   0b00001111, 0b11110000,
   0b00000111, 0b11100000,
   0b00000000, 0b00000000,
-  0b00000000, 0b00000000 };
+  0b00000000, 0b00000000 }; */
 
 void setup() {
+  int colorWipe = 0;
   pinMode(LED_PIN, OUTPUT);
   Serial.begin(9600);
   strip.begin();
@@ -81,6 +122,21 @@ void setup() {
 }
 
 void loop() {
+    for (int wheelPos = 0; wheelPos < 255; wheelPos++) {
+        // Convert a hue value (0 to 255) into RGB colors
+        int r = 0, g = 0, b = 0;
+        wheel(wheelPos, &r, &g, &b);
+    
+        // Set all pixels to the calculated color
+        for (int i = 0; i < strip.numPixels(); i++) {
+          strip.setPixelColor(i, strip.Color(r, g, b));
+        }
+        strip.show(); // Display the colors on all LEDs
+        delay(50);    // Pause for a moment
+      }
+    //if (colorWipe = 1) {
+      
+    //}
     // Check if there are characters available in the serial buffer
     if (Serial.available() > 0) {
       // Read the next character from the serial buffer
@@ -134,45 +190,25 @@ void loop() {
                    display.setCursor(0,0);
                    display.write("B");
                    break;
-        case '#' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write(firstChar);
+        case '#' : setLeds(255, 0, 0); //0x320000); // Set Red
                    break;
-        case '$' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write(firstChar);
+        case '$' : setLeds(0, 255, 0); //0x003200); // Set Green
                    break;
-        case '%' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write(firstChar);
+        case '%' : setLeds(0, 0, 255); //0x000032); // Set Blue
                    break;
-        case '^' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write(firstChar);
+        case '^' : setLeds(255, 0, 255); //0x320032); // Set Purple
                    break;
-        case '&' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write(firstChar);
+        case '&' : setLeds(255, 165, 0); //0x322000); // Set Orange
                    break;
-        case '*' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write(firstChar);
+        case '*' : setLeds(255, 255, 255); //0x323232); // Set White
                    break;
-        case '(' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write(firstChar);
+        case '(' : setLeds(0, 255, 255); //0x003232); // Set Cyan
                    break;
-        case ')' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write(firstChar);
+        case ')' : setLeds(255, 255, 0); //0x323200); // Set Yellow
                    break;
-        case '+' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write(firstChar);
+        //case '+' : colorWipe = 1;
                    break;
-        case '-' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write(firstChar);
+        //case '-' : colorWipe = 0;
                    break;
         case 'a' : display.clearDisplay(); // Page 0, RED
                    display.setCursor(0,0);
@@ -333,9 +369,20 @@ void testdrawbitmap(void) {
   delay(1000);
 }
 
-void initialLights() {
+void initialLights(void) {
   for(int i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, strip.Color(50, 0, 50)); // Set color to red (RGB: 255, 0, 0)
+  }
+  strip.show(); // Display the set colors on all LEDs
+}
+
+void setLeds(int r, int g, int b) {
+  //for(int i = 0; i < strip.numPixels(); i++) {
+  //  strip.setPixelColor(i, color);
+  //}
+  //strip.show(); // Display the set colors on all LEDs
+  for(int i = 0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, strip.Color(r, g, b)); // Set color to red (RGB: 255, 0, 0)
   }
   strip.show(); // Display the set colors on all LEDs
 }
@@ -365,4 +412,22 @@ void testscrolltext(void) {
   delay(2000);
   display.stopscroll();
   delay(1000);
+}
+
+void wheel(byte WheelPos, int *r, int *g, int *b) {
+  if (WheelPos < 85) {
+    *r = WheelPos * 3;
+    *g = 255 - WheelPos * 3;
+    *b = 0;
+  } else if (WheelPos < 170) {
+    WheelPos -= 85;
+    *r = 255 - WheelPos * 3;
+    *g = 0;
+    *b = WheelPos * 3;
+  } else {
+    WheelPos -= 170;
+    *r = 0;
+    *g = WheelPos * 3;
+    *b = 255 - WheelPos * 3;
+  }
 }
