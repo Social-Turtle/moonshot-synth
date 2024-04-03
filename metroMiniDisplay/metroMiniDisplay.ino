@@ -1,9 +1,16 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Adafruit_NeoPixel.h> // Library for controlling the NeoTrellis
+
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
+#define LED_VCC     9    //
+#define LED_PIN     8    // Define the data pin connected to the LED strip
+#define LED_GND     7    //
+#define NUM_LEDS    84   // Define the number of LEDs in your strip
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
@@ -30,8 +37,10 @@ static const unsigned char PROGMEM logo_bmp[] =
   0b00000000, 0b00000000 };
 
 void setup() {
+  pinMode(LED_PIN, OUTPUT);
   Serial.begin(9600);
-
+  strip.begin();
+  
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
@@ -40,10 +49,8 @@ void setup() {
 
   // Clear the buffer
   display.clearDisplay();
+  display.setRotation(2); 
   display.display();
-
-  // Draw a single pixel in white
-  display.drawPixel(10, 10, SSD1306_WHITE);
 
   // Show the display buffer on the screen. You MUST call display() after
   // drawing commands to make them visible on screen!
@@ -53,18 +60,24 @@ void setup() {
   testdrawbitmap();
 
   // Invert and restore display, pausing in-between
+    initialLights();
+    strip.show(); // Display the set colors on all LEDs
+
+
   display.invertDisplay(true);
   delay(1000);
   display.invertDisplay(false);
   delay(1000);
   display.clearDisplay();
 
-  display.setTextSize(1);
+  display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
         
       // Print the incoming character on the OLED display
   display.setCursor(0, 0);
   display.write("Press Play...");
+
+  initialLights();
 }
 
 void loop() {
@@ -179,15 +192,15 @@ void loop() {
                    break;
         case 'e' : display.clearDisplay();
                    display.setCursor(0,0);
-                   display.write(firstChar);
+                   display.write("A");
                    break;
         case 'f' : display.clearDisplay();
                    display.setCursor(0,0);
-                   display.write(firstChar);
+                   display.write("A#");
                    break;
         case 'g' : display.clearDisplay();
                    display.setCursor(0,0);
-                   display.write(firstChar);
+                   display.write("B");
                    break;
         case 'h' : display.clearDisplay();
                    display.setCursor(0,0);
@@ -320,6 +333,12 @@ void testdrawbitmap(void) {
   delay(1000);
 }
 
+void initialLights() {
+  for(int i = 0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, strip.Color(50, 0, 50)); // Set color to red (RGB: 255, 0, 0)
+  }
+  strip.show(); // Display the set colors on all LEDs
+}
 
 void testscrolltext(void) {
   display.clearDisplay();

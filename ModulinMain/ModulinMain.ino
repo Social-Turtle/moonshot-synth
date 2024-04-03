@@ -12,13 +12,9 @@
 
 #define Y_DIM 4 //number of rows of key
 #define X_DIM 8 //number of columns of keys
-#define LED_PIN     2    // Define the data pin connected to the LED strip
-#define NUM_LEDS    29   // Define the number of LEDs in your strip
 #define OLED_RESET 4
 
 SoftwareSerial mySerial(0,1);
-
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 //create a matrix of trellis panels
 Adafruit_NeoTrellis t_array[Y_DIM/4][X_DIM/4] = { { Adafruit_NeoTrellis(0x2E), Adafruit_NeoTrellis(0x2F) }};
@@ -35,7 +31,7 @@ const unsigned long debounceNote = 50;
 
 // PITCH COMPUTATION
 int startNote = 55; // the lowest note playable on the modulin's primary string
-const int fretNumber = 25; // the number of notes the potentiometer can reach
+const int fretNumber = 16; // the number of notes the potentiometer can reach
 int modeCode = 0; // scale mode we're in
 int noteVelocity = 80; // note velocity output, later controlled by a fader
 byte major[7] = {0, 2, 4, 5, 7, 9, 11}; // Keep track of our scales! (7 Note Scales only)
@@ -304,7 +300,7 @@ int computeNote(int modeCode,int pitchPin, int fretNumber) {
   lastFret = fretIndex;
   if (fretIndex >= 0 && fretIndex <= fretNumber) {
     int pitch = startNote + (12 * (fretIndex / numOfNotes)) + getCurrentMode(modeCode)[(fretIndex % numOfNotes)];
-    TwelvetoChar(pitch);
+    mySerial.write(TwelvetoChar(pitch));
   return pitch; 
   }
 }
@@ -441,6 +437,7 @@ void setup() {
 
 
 void loop() {
+  Serial.println(noteVelocity);
   //Serial.println(analogRead(A0));
   if (millis() - nextBeat >= tempo/8 && dontbother) { // if we've reached one eighth
     nextBeat = millis();
@@ -467,7 +464,6 @@ void loop() {
 
   noteVelocity = map(analogRead(velocityPin), 1000, 100, 0, 128);   // Convert velocitypin into a velocity value
   trellis.read(); // Check the trellis
-  //Serial.println(noteVelocity);
 
   if ((millis() - lastButtonDebounceTime) > debounceDelay) { // if it's been 5 ms since the last update
     if (noteVelocity != lastVelocity) { // if the velocity has changed, record when
