@@ -164,12 +164,24 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
             mySerial.print('^'); // Purple
         } else if (evt.bit.NUM == 23) {
             mySerial.print('*'); // White
+        } else if (evt.bit.NUM == 24) {
+            mySerial.print('+'); // White
+        } else if (evt.bit.NUM == 25) {
+            mySerial.print('+'); // White
+        } else if (evt.bit.NUM == 26) {
+            mySerial.print('+'); // White
+        } else if (evt.bit.NUM == 27) {
+            mySerial.print('+'); // White
+        } else if (evt.bit.NUM == 28) {
+            mySerial.print('-'); // White
+        } else if (evt.bit.NUM == 29) {
+            mySerial.print('-'); // White
+        } else if (evt.bit.NUM == 30) {
+            mySerial.print('-'); // White
+        } else if (evt.bit.NUM == 31) {
+            mySerial.print('-'); // White
         }
     } else if (currentPage == 1 && evt.bit.NUM > 7 && evt.bit.NUM <= 31) { // DRUM MACHINE SETTINGS FROM HERE:
-        /*
-        There are four rows indexed from 0, 8 columns indexed from 0. We can find out which column we're in by
-        modding the button number by 8. We can find out which row we're in by dividing the button number by 8 (using integer division).
-        */
         trellis.setPixelColor(evt.bit.NUM, 0xFFFF00); //YELLOW
         int buttonRow = evt.bit.NUM / 8;
         int buttonColumn = evt.bit.NUM % 8;
@@ -188,7 +200,7 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
   }
     // WHEN A BUTTON HAS BEEN RELEASED
   else if(evt.bit.EDGE == SEESAW_KEYPAD_EDGE_FALLING) {
-    if (evt.bit.NUM >= 0 && evt.bit.NUM <= 3) { // if in row 1 reset to original color
+    if (evt.bit.NUM >= 0 && evt.bit.NUM <= 7) { // if in row 1 reset to original color
       if (evt.bit.NUM == 0) { // set tab colors to page 0 - red
           trellis.setPixelColor(evt.bit.NUM, 0xFF0000);
           trellis.setPixelColor(1, 0xFFFF4B);
@@ -214,7 +226,7 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
         arrangeChords(buttonRow, buttonColumn, false);
         trellis.setPixelColor(evt.bit.NUM, 0x333333);
         
-    } else { // if a standard button
+    } else { // if a standard button - after pressed
       if (modeMemory[currentPage][evt.bit.NUM] == 0) {
         trellis.setPixelColor(evt.bit.NUM, 0x333333);  
       } else {
@@ -232,7 +244,7 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
 }
 
 // updates colored buttons based on array values
-void trellisFlicker(int currentPage) {
+void trellisFlicker(int currentPage) { //*** rework gere *** first time on a page
   for (int i = 4; i < 32; i++) {
     if (modeMemory[currentPage][i] == 0) { // if value is zero
       trellis.setPixelColor(i, 0x333333); // base color when set to a new page
