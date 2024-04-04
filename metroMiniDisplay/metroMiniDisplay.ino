@@ -17,10 +17,10 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 int colorWipe = 0;
-int wheelPos = 0;
 int loopCounter = 0;
 int r = 0, g = 0, b = 0;
 int cycleParity = 0;
+unsigned long dispTime = millis();
 
 #define LOGO_HEIGHT   32
 #define LOGO_WIDTH    32
@@ -104,196 +104,198 @@ void setup() {
 }
 
 void loop() {
-      if (colorWipe == 1) {
-        cycleParity++;
-        cycleParity %= 2;
-        loopCounter += cycleParity;
-        loopCounter %= 256;
-        wheel(loopCounter, &r, &g, &b);
-        Serial.println(strip.Color(r,g,b));     
-        for (int i = 0; i < strip.numPixels(); i++) {
-          strip.setPixelColor(i, strip.Color(r, g, b));
-        }
-        strip.show(); // Display the colors on all LEDs
-        //delay(25);    // Pause for a moment
+    if (millis() - dispTime > 1000 && dispTime != 0) {
+      display.clearDisplay();
+      display.display();
+      dispTime = 0;
+    }
+    if (colorWipe == 1) {
+      cycleParity++;
+      cycleParity %= 2;
+      loopCounter += cycleParity;
+      loopCounter %= 256;
+      wheel(loopCounter, &r, &g, &b); 
+      for (int i = 0; i < strip.numPixels(); i++) {
+        strip.setPixelColor(i, strip.Color(r, g, b));
       }
+      strip.show(); // Display the colors on all LEDs
+    }
 
     // Check if there are characters available in the serial buffer
     if (Serial.available() > 0) {
       // Read the next character from the serial buffer
       char firstChar = Serial.read();
+      display.clearDisplay();
+      display.setCursor(0,0);
       switch(firstChar) {
-        case '0' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '0' :
                    display.write("C");
+                   dispTime = millis();
                   break;
-        case '1' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '1' : 
                    display.write("C#");
+                   dispTime = millis();
                    break;
-        case '2' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '2' : 
                    display.write("D");
+                   dispTime = millis();
                    break;
-        case '3' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '3' : 
                    display.write("Eb");
+                   dispTime = millis();
                    break;
-        case '4' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '4' :  
                    display.write("E");
+                   dispTime = millis();
                    break;
-        case '5' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write("F");
+        case '5' :  
+                   display.write("F");\
+                   dispTime = millis();
                    break;
-        case '6' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '6' : 
                    display.write("F#");
+                   dispTime = millis();
                    break;
-        case '7' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '7' :
                    display.write("G");
+                   dispTime = millis();
                    break;
-        case '8' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '8' : 
                    display.write("Ab");
+                   dispTime = millis();
                    break;
-        case '9' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '9' : 
                    display.write("A");
+                   dispTime = millis();
                    break;
-        case '!' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '!' : 
                    display.write("Bb");
+                   dispTime = millis();
                    break;
-        case '@' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case '@' : 
                    display.write("B");
+                   dispTime = millis();
                    break;
-        case '#' : setLeds(255, 0, 0); // Set Red
+//        case '#' : setLeds(255, 0, 0); // Set Red
+//                   break;
+//        case '$' : setLeds(0, 255, 0); // Set Green
+//                   break;
+//        case '%' : setLeds(0, 0, 255); // Set Blue
+//                   break;
+//        case '^' : setLeds(255, 0, 255); // Set Purple
+//                   break;
+//        case '&' : setLeds(255, 165, 0); // Set Orange
+//                   break;
+//        case '*' : setLeds(255, 255, 255); // Set White
+//                   break;
+//        case '(' : setLeds(0, 255, 255); // Set Cyan
+//                   break;
+//        case ')' : setLeds(255, 255, 0); // Set Yellow
+//                   break;
+        case '#' : setLeds(50, 0, 0); // Set Red
                    break;
-        case '$' : setLeds(0, 255, 0); // Set Green
+        case '$' : setLeds(0, 50, 0); // Set Green
                    break;
-        case '%' : setLeds(0, 0, 255); // Set Blue
+        case '%' : setLeds(0, 0, 50); // Set Blue
                    break;
-        case '^' : setLeds(255, 0, 255); // Set Purple
+        case '^' : setLeds(50, 0, 50); // Set Purple
                    break;
-        case '&' : setLeds(255, 165, 0); // Set Orange
+        case '&' : setLeds(50, 25, 0); // Set Orange
                    break;
-        case '*' : setLeds(255, 255, 255); // Set White
+        case '*' : setLeds(50, 50, 50); // Set White
                    break;
-        case '(' : setLeds(0, 255, 255); // Set Cyan
+        case '(' : setLeds(0, 50, 50); // Set Cyan
                    break;
-        case ')' : setLeds(255, 255, 0); // Set Yellow
+        case ')' : setLeds(50, 50, 0); // Set Yellow
                    break;
         case '+' : colorWipe = 1;
                    break;
         case '-' : colorWipe = 0;
                    break;
-        case 'a' : display.clearDisplay(); // Page 0, RED
-                   display.setCursor(0,0);
-                   display.write("Drum Machine");
+        case 'a' : dispTime = millis();
+                   display.write("Drums");
                    break;
-        case 'b' : display.clearDisplay(); // Page 1, YELLOW
-                   display.setCursor(0,0);
-                   display.write("Chord Bank");
+        case 'b' : dispTime = millis();
+                   display.write("Chords");
                    break;
-        case 'c' : display.clearDisplay(); // Page 2, GREEN
-                   display.setCursor(0,0);
-                   display.write("Settings Mode");
+        case 'c' : dispTime = millis();
+                   display.write("Settings");
                    break;
-        case 'd' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'd' : dispTime = millis();
                    display.write(firstChar);
                    break;
-        case 'e' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'e' : dispTime = millis();
                    display.write("A");
                    break;
-        case 'f' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'f' : dispTime = millis();
                    display.write("A#");
                    break;
-        case 'g' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'g' : dispTime = millis();
                    display.write("B");
                    break;
-        case 'h' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'h' : dispTime = millis();
                    display.write(firstChar);
                    break;
-        case 'i' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'i' : dispTime = millis();
                    display.write(firstChar);
                    break;
-        case 'j' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'j' : dispTime = millis();
                    display.write(firstChar);
                    break;
-        case 'k' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'k' : dispTime = millis();
                    display.write(firstChar);
                    break;
-        case 'l' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'l' : dispTime = millis();
                    display.write(firstChar);
                    break;
-        case 'm' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'm' : dispTime = millis();
                    display.write(firstChar);
                    break;
-        case 'n' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'n' : dispTime = millis();
                    display.write(firstChar);
                    break;
-        case 'o' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'o' : dispTime = millis();
                    display.write(firstChar);
                    break;
-        case 'p' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'p' : dispTime = millis();
                    display.write(firstChar);
                    break;
-        case 'q' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write("Drums Muted");
+        case 'q' : dispTime = millis();
+                   display.write("Drums Off");
                    break;
-        case 'r' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write("Drums Playing");
+        case 'r' : dispTime = millis();
+                   display.write("Drums On");
                    break;
-        case 's' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 's' : dispTime = millis();
+                   display.setTextSize(1);
                    display.write("Cannot alter mode");
+                   display.setTextSize(2);
                    break;
-        case 't' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 't' : dispTime = millis();
+                   display.setTextSize(1);
                    display.write("Mode increased");
+                   display.setTextSize(2);
                    break;
-        case 'u' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'u' : display.setTextSize(1);
                    display.write("Cannot alter mode");
+                   display.setTextSize(2);
                    break;
-        case 'v' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'v' : dispTime = millis();
+                   display.setTextSize(1);
                    display.write("Mode decreased");
+                   display.setTextSize(2);
                    break;
-        case 'w' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'w' : dispTime = millis();
                    display.write("+1 Octave");
                    break;
-        case 'x' : display.clearDisplay();
-                   display.setCursor(0,0);
+        case 'x' : dispTime = millis();
                    display.write("-1 Octave");
                    break;
-        case 'y' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write("+1 Semitone");
+        case 'y' : dispTime = millis();
+                   display.write("+1 Semi");
                    break;
-        case 'z' : display.clearDisplay();
-                   display.setCursor(0,0);
-                   display.write("-1 Semitone");
+        case 'z' : dispTime = millis();
+                   display.write("-1 Semi");
                    break;
         default :  display.clearDisplay(); break;
       }
