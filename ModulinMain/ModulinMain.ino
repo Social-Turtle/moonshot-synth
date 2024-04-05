@@ -185,7 +185,7 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
         trellis.setPixelColor(evt.bit.NUM, 0xFFFF00); //YELLOW
         int buttonRow = evt.bit.NUM / 8;
         int buttonColumn = evt.bit.NUM % 8;
-        //arrangeChords(buttonRow, buttonColumn, true);
+        arrangeChords(buttonRow, buttonColumn, true);
                 
     } else if (evt.bit.NUM > 3 && evt.bit.NUM <= 31) { // if a standard button and chords or beatbox
         toggleArray(evt.bit.NUM, currentPage);
@@ -226,7 +226,7 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
         */
         int buttonRow = evt.bit.NUM / 8;
         int buttonColumn = evt.bit.NUM % 8;
-        //arrangeChords(buttonRow, buttonColumn, false);
+        arrangeChords(buttonRow, buttonColumn, false);
         trellis.setPixelColor(evt.bit.NUM, 0x333333);
         
     } else { // if a standard button - after pressed
