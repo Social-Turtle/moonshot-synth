@@ -31,7 +31,7 @@ const unsigned long debounceNote = 50;
 
 // PITCH COMPUTATION
 int startNote = 55; // the lowest note playable on the modulin's primary string
-const int fretNumber = 16; // the number of notes the potentiometer can reach
+const int fretNumber = 15; // the number of notes the potentiometer can reach
 int modeCode = 0; // scale mode we're in
 int noteVelocity = 80; // note velocity output, later controlled by a fader
 byte major[7] = {0, 2, 4, 5, 7, 9, 11}; // Keep track of our scales! (7 Note Scales only)
@@ -141,7 +141,7 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
           }
           //trellis.setPixelColor(evt.bit.NUM, 0x005555); // CYAN
         } else if (evt.bit.NUM == 13) { // Row 1, button 5 = MODECODE + 1 IF AVAILABLE
-          if (modeCode < 4) {
+          if (modeCode < 2) {
             modeCode++;
             mySerial.print('t'); // Increased
           } else {
@@ -426,7 +426,7 @@ char TwelvetoChar(int num) {
 int computeNote(int modeCode,int pitchPin, int fretNumber) {
   // compute proper pitch from mode data and ribbon data
   int numOfNotes = modeLengths;
-  int fretIndex = map(noteAverage, 270, 710, 0, fretNumber); // calculate fret value
+  int fretIndex = map(noteAverage, 320, 720, 0, fretNumber); // calculate fret value
   lastFret = fretIndex;
   if (fretIndex >= 0 && fretIndex <= fretNumber) {
     int pitch = startNote + (12 * (fretIndex / numOfNotes)) + getCurrentMode(modeCode)[(fretIndex % numOfNotes)];
