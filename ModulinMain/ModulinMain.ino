@@ -119,19 +119,15 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
         if (evt.bit.NUM == 8) { // Row 1, button 0 = - 1 semitone
           startNote--;
           mySerial.print('z');
-          //trellis.setPixelColor(evt.bit.NUM, 0x550000); // RED
         } else if (evt.bit.NUM == 9) { // Row 1, button 1 = + 1 semitone
           startNote++;
           mySerial.print('y');
-          //trellis.setPixelColor(evt.bit.NUM, 0x005500); // GREEN   
         } else if (evt.bit.NUM == 10) { // Row 1, button 2 = - 1 octave
           startNote -= 12;
           mySerial.print('x');
-          //trellis.setPixelColor(evt.bit.NUM, 0x000055); // BLUE 
         } else if (evt.bit.NUM == 11) { // Row 1, button 3 = + 1 octave
           startNote += 12;
           mySerial.print('w');
-          //trellis.setPixelColor(evt.bit.NUM, 0x550055); // PURPLE  
         } else if (evt.bit.NUM == 12) { // Row 1, button 4 = MODECODE - 1 IF AVAILABLE
           if (modeCode > 0) {
             mySerial.print('v'); // Decreased
@@ -139,7 +135,6 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
           } else {
             mySerial.print('u'); // Can't decrease
           }
-          //trellis.setPixelColor(evt.bit.NUM, 0x005555); // CYAN
         } else if (evt.bit.NUM == 13) { // Row 1, button 5 = MODECODE + 1 IF AVAILABLE
           if (modeCode < 2) {
             modeCode++;
@@ -147,7 +142,6 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
           } else {
             mySerial.print('s'); // Can't increase
           }
-          //trellis.setPixelColor(evt.bit.NUM, 0x552200); // ORANGE      
         } else if (evt.bit.NUM == 16) {
             mySerial.print('#'); // Red
         } else if (evt.bit.NUM == 17) {
@@ -205,21 +199,34 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
           trellis.setPixelColor(evt.bit.NUM, 0xFF0000);
           trellis.setPixelColor(1, 0xFFFF4B);
           trellis.setPixelColor(2, 0x4BFF4B);
+          trellis.setPixelColor(4, 0x000000);
+          trellis.setPixelColor(5, 0x000000);
+          trellis.setPixelColor(6, 0x000000);
  
       } else if (evt.bit.NUM == 1) { // set tab colors to page 1 - yellow
           trellis.setPixelColor(evt.bit.NUM, 0xFFFF00);
           trellis.setPixelColor(0, 0xFF4B4B);
           trellis.setPixelColor(2, 0x4BFF4B);
+          trellis.setPixelColor(4, 0x000000);
+          trellis.setPixelColor(5, 0x000000);
+          trellis.setPixelColor(6, 0x000000);
 
       } else if (evt.bit.NUM == 2) { // set tab colors to page 2 - green
           trellis.setPixelColor(evt.bit.NUM, 0x00FF00);
           trellis.setPixelColor(0, 0xFF4B4B);
           trellis.setPixelColor(1, 0xFFFF4B);
+          trellis.setPixelColor(4, 0x000000);
+          trellis.setPixelColor(5, 0x000000);
+          trellis.setPixelColor(6, 0x000000);
 
       } else if (evt.bit.NUM == 3) { // if it's the tempo button, just keep it blue
           trellis.setPixelColor(evt.bit.NUM, 0x0000FF);
+      } else {
+        trellis.setPixelColor(4, 0x000000);
+        trellis.setPixelColor(5, 0x000000);
+        trellis.setPixelColor(6, 0x000000);
       }
-    } else if (currentPage == 1 && evt.bit.NUM > 7 && evt.bit.NUM <= 31) { // If a standard chord button
+    } else if (currentPage == 1) { // If a standard chord button
         /*
         There are four rows indexed from 0, 8 columns indexed from 0. We can find out which column we're in by
         modding the button number by 8. We can find out which row we're in by dividing the button number by 8 (using integer division).
@@ -229,63 +236,61 @@ TrellisCallback blink(keyEvent evt){ // Operational Trellis FSM
         arrangeChords(buttonRow, buttonColumn, false);
         trellis.setPixelColor(evt.bit.NUM, 0x333333);
         
-    } else { // if a standard button - after pressed
-      if (evt.bit.NUM > 7 && modeMemory[currentPage][evt.bit.NUM] == 0 && currentPage == 0) {
-        trellis.setPixelColor(evt.bit.NUM, 0x333333);  
-      } else {
-        if (currentPage == 0) {
+    } else if (currentPage == 0){ // if a standard drum button
+      if (modeMemory[currentPage][evt.bit.NUM] == 0) { // if value is 0
+        trellis.setPixelColor(evt.bit.NUM, 0x333333);  // set white
+      } else { // otherwise set red
           trellis.setPixelColor(evt.bit.NUM, 0x640000);
-        } else if (currentPage == 2) { // Settings button colors go here
-            if (evt.bit.NUM == 8) { // Row 1, button 0 = - 1 semitone
-            trellis.setPixelColor(evt.bit.NUM, 0x550000); // RED
-          } else if (evt.bit.NUM == 9) { // Row 1, button 1 = + 1 semitone
-            trellis.setPixelColor(evt.bit.NUM, 0x005500); // GREEN   
-          } else if (evt.bit.NUM == 10) { // Row 1, button 2 = - 1 octave
-            trellis.setPixelColor(evt.bit.NUM, 0x000055); // BLUE 
-          } else if (evt.bit.NUM == 11) { // Row 1, button 3 = + 1 octave
-            trellis.setPixelColor(evt.bit.NUM, 0x550055); // PURPLE  
-          } else if (evt.bit.NUM == 12) { // Row 1, button 4 = MODECODE - 1 IF AVAILABLE
-            trellis.setPixelColor(evt.bit.NUM, 0x005555); // CYAN
-          } else if (evt.bit.NUM == 13) { // Row 1, button 5 = MODECODE + 1 IF AVAILABLE
-            trellis.setPixelColor(evt.bit.NUM, 0x552200); // ORANGE      
-          } else if (evt.bit.NUM == 16) {
-              trellis.setPixelColor(evt.bit.NUM, 0xAA0000); // Red
-          } else if (evt.bit.NUM == 17) {
-              trellis.setPixelColor(evt.bit.NUM, 0xAA5500); // Orange
-          } else if (evt.bit.NUM == 18) {
-              trellis.setPixelColor(evt.bit.NUM, 0xAAAA00); // Yellow
-          } else if (evt.bit.NUM == 19) {
-              trellis.setPixelColor(evt.bit.NUM, 0x00AA00); // Green
-          } else if (evt.bit.NUM == 20) {
-              trellis.setPixelColor(evt.bit.NUM, 0x00AAAA); // Cyan
-          } else if (evt.bit.NUM == 21) {
-              trellis.setPixelColor(evt.bit.NUM, 0x0000AA); // Blue
-          } else if (evt.bit.NUM == 22) {
-              trellis.setPixelColor(evt.bit.NUM, 0xAA00AA); // Purple
-          } else if (evt.bit.NUM == 23) {
-              trellis.setPixelColor(evt.bit.NUM, 0x0AAAAAA); // White
-          } else if (evt.bit.NUM == 24) {
-              trellis.setPixelColor(evt.bit.NUM, 0x033AA33); // Go
-          } else if (evt.bit.NUM == 25) {
-              trellis.setPixelColor(evt.bit.NUM, 0x033AA33); // Go
-          } else if (evt.bit.NUM == 26) {
-              trellis.setPixelColor(evt.bit.NUM, 0x033AA33); // Go
-          } else if (evt.bit.NUM == 27) {
-              trellis.setPixelColor(evt.bit.NUM, 0x033AA33); // Go
-          } else if (evt.bit.NUM == 28) {
-              trellis.setPixelColor(evt.bit.NUM, 0x0AA3333); // Stop
-          } else if (evt.bit.NUM == 29) {
-              trellis.setPixelColor(evt.bit.NUM, 0x0AA3333); // Stop
-          } else if (evt.bit.NUM == 30) {
-              trellis.setPixelColor(evt.bit.NUM, 0x0AA3333); // Stop
-          } else if (evt.bit.NUM == 31) {
-              trellis.setPixelColor(evt.bit.NUM, 0x0AA3333); // Stop
-          }
-        }
+      }
+    } else if (currentPage == 2) { // Settings button colors go here
+      if (evt.bit.NUM == 8) { // Row 1, button 0 = - 1 semitone
+        trellis.setPixelColor(evt.bit.NUM, 0x550000); // RED
+      } else if (evt.bit.NUM == 9) { // Row 1, button 1 = + 1 semitone
+        trellis.setPixelColor(evt.bit.NUM, 0x005500); // GREEN   
+      } else if (evt.bit.NUM == 10) { // Row 1, button 2 = - 1 octave
+        trellis.setPixelColor(evt.bit.NUM, 0x000055); // BLUE 
+      } else if (evt.bit.NUM == 11) { // Row 1, button 3 = + 1 octave
+        trellis.setPixelColor(evt.bit.NUM, 0x550055); // PURPLE  
+      } else if (evt.bit.NUM == 12) { // Row 1, button 4 = MODECODE - 1 IF AVAILABLE
+        trellis.setPixelColor(evt.bit.NUM, 0x005555); // CYAN
+      } else if (evt.bit.NUM == 13) { // Row 1, button 5 = MODECODE + 1 IF AVAILABLE
+        trellis.setPixelColor(evt.bit.NUM, 0x552200); // ORANGE      
+      } else if (evt.bit.NUM == 16) {
+          trellis.setPixelColor(evt.bit.NUM, 0xAA0000); // Red
+      } else if (evt.bit.NUM == 17) {
+          trellis.setPixelColor(evt.bit.NUM, 0xAA5500); // Orange
+      } else if (evt.bit.NUM == 18) {
+          trellis.setPixelColor(evt.bit.NUM, 0xAAAA00); // Yellow
+      } else if (evt.bit.NUM == 19) {
+          trellis.setPixelColor(evt.bit.NUM, 0x00AA00); // Green
+      } else if (evt.bit.NUM == 20) {
+          trellis.setPixelColor(evt.bit.NUM, 0x00AAAA); // Cyan
+      } else if (evt.bit.NUM == 21) {
+          trellis.setPixelColor(evt.bit.NUM, 0x0000AA); // Blue
+      } else if (evt.bit.NUM == 22) {
+          trellis.setPixelColor(evt.bit.NUM, 0xAA00AA); // Purple
+      } else if (evt.bit.NUM == 23) {
+          trellis.setPixelColor(evt.bit.NUM, 0x0AAAAAA); // White
+      } else if (evt.bit.NUM == 24) {
+          trellis.setPixelColor(evt.bit.NUM, 0x033AA33); // Go
+      } else if (evt.bit.NUM == 25) {
+          trellis.setPixelColor(evt.bit.NUM, 0x033AA33); // Go
+      } else if (evt.bit.NUM == 26) {
+          trellis.setPixelColor(evt.bit.NUM, 0x033AA33); // Go
+      } else if (evt.bit.NUM == 27) {
+          trellis.setPixelColor(evt.bit.NUM, 0x033AA33); // Go
+      } else if (evt.bit.NUM == 28) {
+          trellis.setPixelColor(evt.bit.NUM, 0x0AA3333); // Stop
+      } else if (evt.bit.NUM == 29) {
+          trellis.setPixelColor(evt.bit.NUM, 0x0AA3333); // Stop
+      } else if (evt.bit.NUM == 30) {
+          trellis.setPixelColor(evt.bit.NUM, 0x0AA3333); // Stop
+      } else if (evt.bit.NUM == 31) {
+          trellis.setPixelColor(evt.bit.NUM, 0x0AA3333); // Stop
       }
     }
-    trellis.show(); //update display
   }
+    trellis.show(); //update display
 }
 
 // updates colored buttons based on array values
