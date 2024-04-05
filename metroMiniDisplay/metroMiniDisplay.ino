@@ -3,6 +3,19 @@
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_NeoPixel.h> // Library for controlling the NeoTrellis
 
+int ledMax = 84;
+int ledA = 78;
+int ledB = 35;
+int ledC = 67;  
+
+void startupLights(int l, int m, int n) {
+  for (int i = ledA; i < 78 + 84; i++) {
+    int j = i % 84;
+      strip.setPixelColor(j, strip.Color(l,m,n));
+      strip.show();
+      delay(15);
+  }
+}
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
@@ -82,10 +95,10 @@ void setup() {
 
   testdrawbitmap();
 
-  // Invert and restore display, pausing in-between
-    initialLights();
-    strip.show(); // Display the set colors on all LEDs
+  initialLights();
+  strip.show(); // Display the set colors on all LEDs
 
+  startupLights(50, 0, 50);
 
   display.invertDisplay(true);
   delay(1000);
@@ -322,25 +335,6 @@ void testdrawchar(void) {
   delay(2000);
 }
 
-void testdrawstyles(void) {
-  display.clearDisplay();
-
-  display.setTextSize(1);             // Normal 1:1 pixel scale
-  display.setTextColor(SSD1306_WHITE);        // Draw white text
-  display.setCursor(0,0);             // Start at top-left corner
-  display.println(F("Hello, world!"));
-
-  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE); // Draw 'inverse' text
-  display.println(3.141592);
-
-  display.setTextSize(2);             // Draw 2X-scale text
-  display.setTextColor(SSD1306_WHITE);
-  display.print(F("0x")); display.println(0xDEADBEEF, HEX);
-
-  display.display();
-  delay(2000);
-}
-
 void testdrawbitmap(void) {
   display.clearDisplay();
 
@@ -353,6 +347,7 @@ void testdrawbitmap(void) {
 }
 
 void initialLights(void) {
+  for (int i = 0;)
   for(int i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, strip.Color(50, 0, 50)); // Set color to red (RGB: 255, 0, 0)
   }
@@ -360,10 +355,6 @@ void initialLights(void) {
 }
 
 void setLeds(int a, int b, int c) {
-  //for(int i = 0; i < strip.numPixels(); i++) {
-  //  strip.setPixelColor(i, color);
-  //}
-  //strip.show(); // Display the set colors on all LEDs
   for(int i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, strip.Color(a, b, c)); // Set color to red (RGB: 255, 0, 0)
   }

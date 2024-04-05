@@ -481,7 +481,6 @@ void arrangeChords(int Y, int X, bool buttonPress) { // button x position, butto
     }
  }
 
-
 void clearData() {
   for (int i = 0; i < numReadings; i++) {
     readings[i] = 0;
@@ -575,9 +574,7 @@ void setup() {
 
 }
 
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Loop Starts Here
-
 
 void loop() {
   if (millis() - nextBeat >= tempo/8 && dontbother) { // if we've reached one eighth
@@ -593,6 +590,7 @@ void loop() {
         noteOn(1, 36, 60);
       }
     }
+    
     MidiUSB.flush();
     beatIndex++;     // do stuff on the eighth
     noteOff(1, 42, 60);
@@ -630,7 +628,9 @@ void loop() {
       updateNote(computeNote(modeCode, pitchPin, fretNumber));
     }
   }
+  
     lastVelocity = noteVelocity;
+    
   if (noteVelocity < toggleThreshold) { // note is triggered
     if (!averagingPaused) {
       averagingPaused = true;
@@ -652,34 +652,4 @@ void loop() {
     }
     noteAverage = total / numReadings;
   }
-
-//    // Running average for note bend data - - - - - - - - - - - - - - - Bend Functionality Not in Use
-//    bendTotal = bendTotal - bendReadings[bendIndex];
-//    bendReadings[bendIndex] = analogRead(bendPin);
-//    bendTotal = bendTotal + bendReadings[bendIndex];
-//    bendIndex++;
-//    if (bendIndex >= bendPoints) {
-//      bendIndex = 0;
-//    }
-//
-//    bendAverage = bendTotal / bendPoints;
-//    bendVal = map(bendAverage, 2, 1020, 0, 16383);
-//    if (bendVal > 8192 + 1500 || bendVal < 8192 - 1500) { // If pot is distant enough to trigger a bend . - - - - - - - - - - - - This methodology spams the pitch wheel, and could use to be updated to only send bend values when either 1: the note played changes or 2: the bend value changes outside of standard noise.
-//      //pitchBend(0, bendVal);
-//    }
-
-//  int sensorValue = analogRead(pitchPin); // Read analog input value - - - - - - - - - - LED Strip Functionality Not in Use
-//  int numLEDsToLight = map(sensorValue, 330, 650, 0, NUM_LEDS);  // Map input value to the number of LEDs
-//  //Serial.println(numLEDsToLight);
-//  // Turn off all LEDs
-//  for (int i = 0; i < NUM_LEDS; i++) {
-//    strip.setPixelColor(i, 0);  // Set color to 'off' (Black)
-//  }
-//  strip.show();  // Update the strip to turn off all LEDs
-//  
-//  // Turn on LEDs based on the mapped value
-//  for (int i = 0; i < numLEDsToLight; i++) {
-//    strip.setPixelColor(i, strip.Color(0, 0, 80));  // Set color to Red (adjust as needed)
-//  }
-//  strip.show();  // Update the strip to show the illuminated LEDs
 }
